@@ -137,36 +137,34 @@ iframely.replace = function(raw, options, callback) {
 					var url = data.url;
 					var embedHtml = embed.html;
 
-					var generateCard = false;
+                                        var generateCard = true;
 
-					if (!embedHtml) {
-						var image = getImage(embed);
-						if (image) {
-							// Generate own card with thumbnail.
-							generateCard = true;
-							embedHtml = '<img src="' + image + '" />';
-						} else {
+                                        if (!embedHtml) {
+                                                var image = getImage(embed);
+                                                if (image) {
+                                                        embedHtml = '<img src="' + image + '" />';
+                                                } else {
+                                                        generateCard = false;
+                                                        var icon = (embed.links.icon && embed.links.icon.length && embed.links.icon[0].href) || false;
 
-							var icon = (embed.links.icon && embed.links.icon.length && embed.links.icon[0].href) || false;
+                                                        // No embed code. Show link with title only.
+                                                        app.render('partials/iframely-link-title', {
+                                                                title: embed.meta.title || url,
+                                                                embed: embed,
+                                                                icon: icon,
+                                                                url: url
+                                                        }, function (err, parsed) {
 
-							// No embed code. Show link with title only.
-							app.render('partials/iframely-link-title', {
-								title: embed.meta.title || url,
-								embed: embed,
-								icon: icon,
-								url: url
-							}, function (err, parsed) {
+                                                                if (err) {
+                                                                        winston.error('[plugin/iframely] Could not parse embed: ' + err.message);
+                                                                        return next(null, html);
+                                                                }
 
-								if (err) {
-									winston.error('[plugin/iframely] Could not parse embed: ' + err.message);
-									return next(null, html);
-								}
-
-								next(null, html.replace(match, parsed));
-							});
-							return;
-						}
-					}
+                                                                next(null, html.replace(match, parsed));
+                                                        });
+                                                        return;
+                                                }
+                                        }
 
 					// Format meta info.
 					var meta = [];
@@ -302,7 +300,7 @@ iframely.query = function(data, callback) {
 					return callback();
 				} else {
 					if (res.statusCode === 200 && body) {
-						iframely.cache.set(data.url, body);
+                                                //iframely.cache.set(data.url, body);
 						try {
 							callback(null, {
 								url: data.url,
@@ -471,8 +469,8 @@ function getDate(date) {
 }
 
 function getImage(embed) {
-	var image = (embed.links.thumbnail && embed.links.thumbnail[0]) || (embed.links.image && embed.links.image[0]);
-	return image && image.href;
+        var image = (embed.links.thumbnail && embed.links.thumbnail[0]) || (embed.links.image && embed.links.image[0]);
+        return image && image.href;
 }
 
 module.exports = iframely;
